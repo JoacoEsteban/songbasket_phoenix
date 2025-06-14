@@ -45,7 +45,7 @@ if config_env() == :prod do
       """
 
   host = System.get_env("PHX_HOST") || "example.com"
-  port = String.to_integer(System.get_env("PORT") || "4000")
+  port = String.to_integer(System.get_env("PORT") || "5000")
 
   config :songbasket_phoenix, :dns_cluster_query, System.get_env("DNS_CLUSTER_QUERY")
 
@@ -111,3 +111,30 @@ if config_env() == :prod do
   #
   # See https://hexdocs.pm/swoosh/Swoosh.html#module-installation for details.
 end
+
+config :spotify_ex,
+       :client_id,
+       (case(System.get_env("SPOTIFY_CLIENT_ID")) do
+          nil -> raise "SPOTIFY_CLIENT_ID environment variable is not set"
+          value -> value
+        end)
+
+config :spotify_ex,
+       :secret_key,
+       (case(System.get_env("SPOTIFY_SECRET_KEY")) do
+          nil -> raise "SPOTIFY_SECRET_KEY environment variable is not set"
+          value -> value
+        end)
+
+config :spotify_ex,
+       :callback_url,
+       (case(config_env()) do
+          :prod -> "https://api.songbasket.com/handle_authorization"
+          _ -> "http://localhost:5000/handle_authorization"
+        end)
+
+config :spotify_ex, :scopes, [
+  "user-read-private",
+  "user-read-email",
+  "playlist-read-private"
+]
