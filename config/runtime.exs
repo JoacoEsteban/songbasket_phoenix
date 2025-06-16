@@ -138,3 +138,17 @@ config :spotify_ex, :scopes, [
   "user-read-email",
   "playlist-read-private"
 ]
+
+config :songbasket_phoenix,
+       :encryption_key,
+       (case(System.get_env("ENCRYPTION_KEY")) do
+          nil ->
+            raise "ENCRYPTION_KEY environment variable is not set"
+
+          value ->
+            key = System.fetch_env!("ENCRYPTION_KEY") |> Base.decode64!()
+
+            byte_size(key) == 32
+
+            value
+        end)
