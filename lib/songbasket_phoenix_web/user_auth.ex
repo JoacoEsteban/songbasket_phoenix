@@ -93,7 +93,17 @@ defmodule SongbasketPhoenixWeb.UserAuth do
   def fetch_current_user(conn, _opts) do
     {user_token, conn} = ensure_user_token(conn)
     user = user_token && Accounts.get_user_by_session_token(user_token)
-    assign(conn, :current_user, user)
+
+    creds =
+      user &&
+        %Spotify.Credentials{
+          access_token: user.spotify_access_token,
+          refresh_token: user.spotify_refresh_token
+        }
+
+    conn
+    |> assign(:current_user, user)
+    |> assign(:spotify_credentials, creds)
   end
 
   defp ensure_user_token(conn) do

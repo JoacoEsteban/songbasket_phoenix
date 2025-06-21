@@ -48,16 +48,10 @@ defmodule SongbasketPhoenixWeb.Router do
   ## Authentication routes
 
   scope "/", SongbasketPhoenixWeb do
-    pipe_through [:browser, :redirect_if_user_is_authenticated]
+    pipe_through [:browser]
 
-    get "/users/register", UserRegistrationController, :new
-    post "/users/register", UserRegistrationController, :create
-    get "/users/log_in", UserSessionController, :new
-    post "/users/log_in", UserSessionController, :create
-    get "/users/reset_password", UserResetPasswordController, :new
-    post "/users/reset_password", UserResetPasswordController, :create
-    get "/users/reset_password/:token", UserResetPasswordController, :edit
-    put "/users/reset_password/:token", UserResetPasswordController, :update
+    get "/spotify_login", UserRegistrationController, :spotify_start_authorization
+    get "/handle_authorization", UserRegistrationController, :spotify_authorize
   end
 
   scope "/", SongbasketPhoenixWeb do

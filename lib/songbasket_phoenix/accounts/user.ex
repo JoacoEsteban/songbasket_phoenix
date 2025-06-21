@@ -1,13 +1,40 @@
 defmodule SongbasketPhoenix.Accounts.User do
+  @derive {Jason.Encoder,
+           only: [
+             :id,
+             :email,
+             :spotify_id,
+             :spotify_access_token,
+             :spotify_refresh_token,
+             :country,
+             :display_name,
+             :followers,
+             :href,
+             :images,
+             :product,
+             :type,
+             :uri
+           ]}
+
   use Ecto.Schema
   import Ecto.Changeset
 
   schema "users" do
-    field :email, :string
-    field :password, :string, virtual: true, redact: true
-    field :hashed_password, :string, redact: true
-    field :current_password, :string, virtual: true, redact: true
     field :confirmed_at, :utc_datetime
+
+    field :spotify_id, SongbasketPhoenix.EncryptedField, redact: true
+    field :spotify_access_token, SongbasketPhoenix.EncryptedField, redact: true
+    field :spotify_refresh_token, SongbasketPhoenix.EncryptedField, redact: true
+
+    field :country, :string
+    field :display_name, :string
+    field :email, :string
+    field :followers, :map
+    field :href, :string
+    field :images, :map
+    field :product, :string
+    field :type, :string
+    field :uri, :string
 
     timestamps(type: :utc_datetime)
   end
@@ -37,9 +64,26 @@ defmodule SongbasketPhoenix.Accounts.User do
   """
   def registration_changeset(user, attrs, opts \\ []) do
     user
-    |> cast(attrs, [:email, :password])
-    |> validate_email(opts)
-    |> validate_password(opts)
+    |> cast(attrs, [
+      :spotify_id,
+      :spotify_access_token,
+      :spotify_refresh_token,
+      :country,
+      :display_name,
+      :email,
+      :followers,
+      :href,
+      :images,
+      :product,
+      :type,
+      :uri
+    ])
+    |> validate_required([:spotify_id, :spotify_access_token, :spotify_refresh_token])
+    |> unique_constraint(:email, name: :users_email_index)
+    |> unique_constraint([:spotify_id, :email], name: :users_spotify_id_email_index)
+
+    # |> validate_password(opts)
+    # |> validate_email(opts)
   end
 
   defp validate_email(changeset, opts) do
@@ -58,6 +102,13 @@ defmodule SongbasketPhoenix.Accounts.User do
     # |> validate_format(:password, ~r/[a-z]/, message: "at least one lower case character")
     # |> validate_format(:password, ~r/[A-Z]/, message: "at least one upper case character")
     # |> validate_format(:password, ~r/[!?@#$%^&*_0-9]/, message: "at least one digit or punctuation character")
+    |> maybe_hash_password(opts)
+  end
+
+  defp validate_spotify_access_token(changeset, opts) do
+    changeset
+    # TODO check actual size
+    |> validate_length(:password, min: 1, max: 200)
     |> maybe_hash_password(opts)
   end
 
@@ -128,34 +179,5 @@ defmodule SongbasketPhoenix.Accounts.User do
   def confirm_changeset(user) do
     now = DateTime.utc_now() |> DateTime.truncate(:second)
     change(user, confirmed_at: now)
-  end
-
-  @doc """
-  Verifies the password.
-
-  If there is no user or the user doesn't have a password, we call
-  `Bcrypt.no_user_verify/0` to avoid timing attacks.
-  """
-  def valid_password?(%SongbasketPhoenix.Accounts.User{hashed_password: hashed_password}, password)
-      when is_binary(hashed_password) and byte_size(password) > 0 do
-    Bcrypt.verify_pass(password, hashed_password)
-  end
-
-  def valid_password?(_, _) do
-    Bcrypt.no_user_verify()
-    false
-  end
-
-  @doc """
-  Validates the current password otherwise adds an error to the changeset.
-  """
-  def validate_current_password(changeset, password) do
-    changeset = cast(changeset, %{current_password: password}, [:current_password])
-
-    if valid_password?(changeset.data, password) do
-      changeset
-    else
-      add_error(changeset, :current_password, "is not valid")
-    end
   end
 end
