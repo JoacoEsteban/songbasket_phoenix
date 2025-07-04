@@ -16,6 +16,13 @@ defmodule SongbasketPhoenix.Accounts do
     |> upsert_user()
   end
 
+  def update_user_spotify_access_token(user, attrs) do
+    user
+    |> User.spotify_access_token_changeset(attrs)
+    |> IO.inspect(label: :changeset)
+    |> update_user()
+  end
+
   defp upsert_user(changeset) do
     update_fields =
       changeset.changes
@@ -27,6 +34,10 @@ defmodule SongbasketPhoenix.Accounts do
       on_conflict: [set: update_fields],
       conflict_target: [:spotify_id, :email]
     )
+  end
+
+  defp update_user(changeset) do
+    Repo.update(changeset)
   end
 
   def change_user_registration(%User{} = user, attrs \\ %{}) do

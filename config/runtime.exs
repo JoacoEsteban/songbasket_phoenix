@@ -45,7 +45,7 @@ if config_env() == :prod do
       """
 
   host = System.get_env("PHX_HOST") || "example.com"
-  port = String.to_integer(System.get_env("PORT") || "5000")
+  port = String.to_integer(System.get_env("PORT") || "5050")
 
   config :songbasket_phoenix, :dns_cluster_query, System.get_env("DNS_CLUSTER_QUERY")
 
@@ -130,14 +130,8 @@ config :spotify_ex,
        :callback_url,
        (case(config_env()) do
           :prod -> "https://api.songbasket.com/handle_authorization"
-          _ -> "http://localhost:5000/handle_authorization"
+          _ -> "http://127.0.0.1:5050/handle_authorization/"
         end)
-
-config :spotify_ex, :scopes, [
-  "user-read-private",
-  "user-read-email",
-  "playlist-read-private"
-]
 
 config :songbasket_phoenix,
        :encryption_key,

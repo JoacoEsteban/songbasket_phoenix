@@ -54,6 +54,9 @@ defmodule SongbasketPhoenixWeb.Router do
   scope "/", SongbasketPhoenixWeb do
     pipe_through [:browser]
 
+    get "/request_auth", UserRegistrationController, :client_request_auth
+    get "/retrieve_token", UserRegistrationController, :client_retrieve_token
+
     get "/spotify_login", UserRegistrationController, :spotify_start_authorization
     get "/handle_authorization", UserRegistrationController, :spotify_authorize
   end
@@ -61,7 +64,12 @@ defmodule SongbasketPhoenixWeb.Router do
   scope "/api", SongbasketPhoenixWeb do
     pipe_through [:api, :require_authenticated_user]
 
+    # post "/request_auth_tokens", AuthController, :request_auth_tokens
+
+    get "/me", UserSpotifyController, :me
     get "/playlists", UserSpotifyController, :user_playlists
+    get "/playlists/:playlist_id/tracks", UserSpotifyController, :playlist_tracks
+    get "/albums/:album_id", UserSpotifyController, :album
   end
 
   scope "/", SongbasketPhoenixWeb do

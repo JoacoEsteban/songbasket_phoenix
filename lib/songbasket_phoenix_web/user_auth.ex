@@ -5,6 +5,7 @@ defmodule SongbasketPhoenixWeb.UserAuth do
   import Phoenix.Controller
 
   alias SongbasketPhoenix.Accounts
+  alias SongbasketPhoenix.Auth.Store
 
   # Make the remember me cookie valid for 60 days.
   # If you want bump or reduce this value, also change
@@ -27,21 +28,23 @@ defmodule SongbasketPhoenixWeb.UserAuth do
   """
   def log_in_user(conn, user, params \\ %{}) do
     token = Accounts.generate_user_session_token(user)
-    user_return_to = get_session(conn, :user_return_to)
+
+    location =
+      case get_session(conn, :user_return_external) do
+        nil -> [to: get_session(conn, :user_return_to) || signed_in_path(conn)]
+        url -> [external: url]
+      end
 
     conn
     |> renew_session()
     |> put_token_in_session(token)
-    |> maybe_write_remember_me_cookie(token, params)
-    |> redirect(to: user_return_to || signed_in_path(conn))
+    |> put_token_in_storage(token, params)
+    |> write_remember_me_cookie(token, params)
+    |> redirect(location)
   end
 
-  defp maybe_write_remember_me_cookie(conn, token, %{"remember_me" => "true"}) do
+  defp write_remember_me_cookie(conn, token, _params) do
     put_resp_cookie(conn, @remember_me_cookie, token, @remember_me_options)
-  end
-
-  defp maybe_write_remember_me_cookie(conn, _token, _params) do
-    conn
   end
 
   # This function renews the session ID and erases the whole
@@ -92,7 +95,11 @@ defmodule SongbasketPhoenixWeb.UserAuth do
   """
   def fetch_current_user(conn, _opts) do
     {user_token, conn} = ensure_user_token(conn)
-    user = user_token && Accounts.get_user_by_session_token(user_token)
+
+    user =
+      user_token &&
+        Accounts.get_user_by_session_token(user_token)
+        |> IO.inspect(label: :user)
 
     creds =
       user &&
@@ -112,11 +119,23 @@ defmodule SongbasketPhoenixWeb.UserAuth do
     else
       conn = fetch_cookies(conn, signed: [@remember_me_cookie])
 
-      if token = conn.cookies[@remember_me_cookie] do
+      token =
+        conn.cookies[@remember_me_cookie] || token_from_header(conn)
+
+      IO.inspect(token, label: :got_token)
+
+      if token do
         {token, put_token_in_session(conn, token)}
       else
         {nil, conn}
       end
+    end
+  end
+
+  defp token_from_header(conn) do
+    case get_req_header(conn, "authorization") |> IO.inspect(label: :TOKEN) do
+      ["Bearer " <> token] -> Base.url_decode64!(token)
+      _ -> nil
     end
   end
 
@@ -227,6 +246,18 @@ defmodule SongbasketPhoenixWeb.UserAuth do
     conn
     |> put_session(:user_token, token)
     |> put_session(:live_socket_id, "users_sessions:#{Base.url_encode64(token)}")
+  end
+
+  defp put_token_in_storage(conn, token, params) do
+    public_key = params.storage_public_key
+    spotify_user_id = params.spotify_user_id
+
+    unless [public_key, spotify_user_id] |> Enum.any?(&is_nil/1) do
+      IO.inspect(token, label: "put_token_in_storage")
+      Store.put_user_token(public_key, {Base.url_encode64(token), spotify_user_id})
+    end
+
+    conn
   end
 
   defp maybe_store_return_to(%{method: "GET"} = conn) do

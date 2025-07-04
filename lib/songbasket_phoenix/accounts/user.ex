@@ -39,6 +39,12 @@ defmodule SongbasketPhoenix.Accounts.User do
     timestamps(type: :utc_datetime)
   end
 
+  def spotify_access_token_changeset(user, attrs, opts \\ []) do
+    user
+    |> cast(attrs, [:spotify_access_token])
+    |> validate_required([:spotify_access_token])
+  end
+
   @doc """
   A user changeset for registration.
 

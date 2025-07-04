@@ -13,7 +13,7 @@ config :songbasket_phoenix,
 
 # Configures the endpoint
 config :songbasket_phoenix, SongbasketPhoenixWeb.Endpoint,
-  url: [host: "localhost"],
+  url: [host: "127.0.0.1"],
   adapter: Bandit.PhoenixAdapter,
   render_errors: [
     formats: [html: SongbasketPhoenixWeb.ErrorHTML, json: SongbasketPhoenixWeb.ErrorJSON],
@@ -60,6 +60,12 @@ config :logger, :console,
 
 # Use Jason for JSON parsing in Phoenix
 config :phoenix, :json_library, Jason
+
+config :spotify_ex, :scopes, [
+  "user-read-private",
+  "user-read-email",
+  "playlist-read-private"
+]
 
 # Import environment specific config. This must remain at the bottom
 # of this file so it overrides the configuration defined above.

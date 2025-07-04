@@ -20,7 +20,8 @@ defmodule SongbasketPhoenix.Application do
       # Start a worker by calling: SongbasketPhoenix.Worker.start_link(arg)
       # {SongbasketPhoenix.Worker, arg},
       # Start to serve requests, typically the last entry
-      SongbasketPhoenixWeb.Endpoint
+      SongbasketPhoenixWeb.Endpoint,
+      SongbasketPhoenix.MemoryStore
     ]
 
     # See https://hexdocs.pm/elixir/Supervisor.html
