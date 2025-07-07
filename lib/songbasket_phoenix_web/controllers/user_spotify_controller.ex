@@ -6,8 +6,22 @@ defmodule SongbasketPhoenixWeb.UserSpotifyController do
     conn
     |> Songbasket.playlists(params)
     |> case do
-      {:ok, resp} -> json(conn, resp)
-      {:error, _} -> json(conn, %{error: "Failed to fetch playlists"})
+      {:ok, resp, conn} -> json(conn, resp)
+      {:error, _, conn} -> json(conn, %{error: "Failed to fetch playlists"})
+    end
+  end
+
+  def playlist_update(conn, %{"playlist_id" => id} = params) do
+    snapshot_id =
+      params
+      |> Map.get("snapshot_id")
+
+    conn
+    |> Songbasket.playlist_update(id, snapshot_id)
+    |> case do
+      {:ok, :not_modified, conn} -> conn |> put_status(:not_modified) |> json("")
+      {:ok, resp, conn} -> json(conn, resp)
+      {:error, _, conn} -> json(conn, %{error: "Failed to fetch playlist tracks"})
     end
   end
 
@@ -15,8 +29,8 @@ defmodule SongbasketPhoenixWeb.UserSpotifyController do
     conn
     |> Songbasket.playlist_tracks(id)
     |> case do
-      {:ok, resp} -> json(conn, resp)
-      {:error, _} -> json(conn, %{error: "Failed to fetch playlist tracks"})
+      {:ok, resp, conn} -> json(conn, resp)
+      {:error, _, conn} -> json(conn, %{error: "Failed to fetch playlist tracks"})
     end
   end
 
@@ -24,8 +38,8 @@ defmodule SongbasketPhoenixWeb.UserSpotifyController do
     conn
     |> Songbasket.me()
     |> case do
-      {:ok, resp} -> json(conn, resp)
-      {:error, _} -> json(conn, %{error: "Failed to fetch user"})
+      {:ok, resp, conn} -> json(conn, resp)
+      {:error, _, conn} -> json(conn, %{error: "Failed to fetch user"})
     end
   end
 
@@ -33,8 +47,8 @@ defmodule SongbasketPhoenixWeb.UserSpotifyController do
     conn
     |> Songbasket.album(id)
     |> case do
-      {:ok, resp} -> json(conn, resp)
-      {:error, _} -> json(conn, %{error: "Failed to fetch album"})
+      {:ok, resp, conn} -> json(conn, resp)
+      {:error, _, conn} -> json(conn, %{error: "Failed to fetch album"})
     end
   end
 end

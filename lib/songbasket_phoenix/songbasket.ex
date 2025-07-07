@@ -18,6 +18,23 @@ defmodule SongbasketPhoenix.Songbasket do
     end)
   end
 
+  def playlist_update(conn, playlist_id, snapshot_id) do
+    {:ok, playlist, conn} =
+      conn
+      |> exec(fn {user_id, spotify_credentials} ->
+        Spotify.Playlist.get_playlist(spotify_credentials, user_id, playlist_id)
+      end)
+
+    if playlist.snapshot_id == snapshot_id do
+      {:ok, :not_modified, conn}
+    else
+      tracks = playlist.tracks
+      playlist = playlist |> Map.put(:tracks, [])
+
+      {:ok, %{"tracks" => tracks, "playlist" => playlist}, conn}
+    end
+  end
+
   def playlist_tracks(conn, playlist_id) do
     conn
     |> exec(fn {user_id, spotify_credentials} ->
@@ -66,7 +83,7 @@ defmodule SongbasketPhoenix.Songbasket do
         |> exec(cb)
 
       {:ok, res} ->
-        {:ok, res}
+        {:ok, res, conn}
     end
   end
 end

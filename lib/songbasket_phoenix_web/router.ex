@@ -69,6 +69,8 @@ defmodule SongbasketPhoenixWeb.Router do
     get "/me", UserSpotifyController, :me
     get "/playlists", UserSpotifyController, :user_playlists
     get "/playlists/:playlist_id/tracks", UserSpotifyController, :playlist_tracks
+    get "/playlists/:playlist_id/update", UserSpotifyController, :playlist_update
+    get "/playlists/:playlist_id/:snapshot_id/update", UserSpotifyController, :playlist_update
     get "/albums/:album_id", UserSpotifyController, :album
   end
 
